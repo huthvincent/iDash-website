@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <style>
+    #map {
+      width: 500px;
+      height: 400px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="map"></div>
+  <script type=text/javascript>
+function initMapAdd(obj1,obj2,map) {
+        
+   
+       var latlng = new google.maps.LatLng(obj1,obj2);
+       var marker = new google.maps.Marker({ 
+            position: latlng, 
+            map: map  
+         }); 
+};
+function JSONLength(obj) {
+ var size = 0, key;
+
+ for (key in obj) {
+ if (obj.hasOwnProperty(key)) size++;
+ }
+
+ return size;
+ };
+
+function Geturl(obj1,obj2,obj3)
+{
+  var url='https://maps.googleapis.com/maps/api/geocode/json?address=';
+  var t1=obj1.split(' ');
+  var t2=obj2.split(' ');
+  for(var i=0;i<t1.length;i++)
+  {
+    url=url+t1[i];
+    if (i<t1.length-1)
+      url=url+'+';
+  }
+  url=url+',';
+ 
+  for(var i=0;i<t2.length;i++)
+  {
+    url=url+'+';
+    url=url+t2[i];
+    
+  }
+  url=url+',';
+  url=url+'+';
+  url=url+obj3;
+  return url;
+
+};
+
+
+function ajax1(url, map){
+   
+    var oAjax = null;
+    if(window.XMLHttpRequest){
+        oAjax = new XMLHttpRequest();
+    }else{
+        oAjax = new ActiveXObject("Microsoft.XMLHTTP");
+    }
+      
+ 
+    oAjax.open('GET', url, true);   
+  
+    oAjax.send();
+   
+
+    oAjax.onreadystatechange = function(){  
+        if(oAjax.readyState == 4){ 
+            if(oAjax.status == 200){ 
+               var msg=oAjax.responseText; 
+        
+               //  alert(msg);
+                
+                var msg1=eval('(' + msg + ')');
+              
+                if( msg.length==128)
+                 {
+                   ajax1(url,map);
+                   return;
+                 } 
+               // alert(msg1.results[0].geometry.location.lng);
+                var obj1=msg1.results[0].geometry.location.lat;
+                var obj2=msg1.results[0].geometry.location.lng;
+               
+                initMapAdd(obj1,obj2,map);
+             
+            }
+        }
+    };
+   
+}
+
+
+function JsontoGeo(obj,map)
+{
+ var num=JSONLength(obj.table.rows);
+ for (var i=0;i<num;i++)
+ {
+   var street=obj.table.rows[i].c[0].v;
+   var city=obj.table.rows[i].c[1].v;
+   var state=obj.table.rows[i].c[2].v;
+   var url=Geturl(street,city,state);
+ //  alert(url);
+   ajax1(url,map);
+
+ }
+ 
+
+
+};
+
+function ajax(url, map){
+   
+    var oAjax = null;
+    if(window.XMLHttpRequest){
+        oAjax = new XMLHttpRequest();
+    }else{
+        oAjax = new ActiveXObject("Microsoft.XMLHTTP");
+    }
+    
+    var my_url="getpages.php"; 
+    oAjax.open('get', my_url, true);   
+  
+    oAjax.send();
+   
+    oAjax.onreadystatechange = function(){ 
+        if(oAjax.readyState == 4){ 
+            if(oAjax.status == 200){ 
+               var msg=oAjax.responseText; 
+                
+                var msg2=msg.substring(48,msg.length-5);
+                //alert(msg2);
+                var msg1=eval('(' + msg2 + ')');
+                
+              //  var city=msg1.table.rows[0].c[1].v; 
+                JsontoGeo(msg1,map);
+                 
+                
+            }
+        }
+    };
+   
+}
+
+var url=Geturl('9500 Gilman Drive','La Jolla','CA');
+ajax1(url);
+
+
+
+
+function run(){
+        var mapDiv = document.getElementById('map');
+        var map = new google.maps.Map(mapDiv, {
+          center: {lat: 32.87, lng: -107.24},
+          zoom: 1
+        });
+
+ajax('https://docs.google.com/spreadsheets/douniwan',map)
+
+};
+
+
+
+
+ </script>
+  <script src="https://maps.googleapis.com/maps/api/js?callback=run" async defer></script>
+
+
+
+</body>
+
+</html>
